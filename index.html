@@ -1,5 +1,12 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="art/icon-192.png">
+<link rel="apple-touch-icon" href="art/icon-512.png">
+<meta name="theme-color" content="#ebe6da">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oops, I Died">
+<meta name="application-name" content="OOPS, I DIED!">
 <title>OOPS, I DIED!</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&display=swap">
 <style>
@@ -118,15 +125,30 @@ button:disabled{cursor:not-allowed}
 
 /* Narrow screens: stack the mat and the tray so everything stays on screen. */
 @media (max-width:640px){
+  /* On a phone the page may scroll: every block keeps a readable size instead of squeezing into the screen. */
+  html,body{height:auto;overflow:auto}
+  #app{height:auto;gap:10px}
   .stat span{font-size:9px}
-  .mat{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;grid-template-areas:"table" "powers" "dice"}
-  .table{grid-template-rows:auto auto auto auto}
-  .powers{border-left:0;border-top:3px solid var(--ink)}
-  .art{height:auto;width:min(100%,380px)}
-  .sec-dice{flex-direction:column}
-  .track{flex:0 0 auto;width:100%;min-height:calc(var(--die) * 1.4)}
-  .controls{align-items:center}
-  .row{justify-content:center}
+  .stat b{font-size:24px}
+  .death p{font-size:12px}
+  .mat{flex:0 0 auto;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;grid-template-areas:"table" "powers" "dice"}
+  .table{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto}
+  .bet{min-height:72px;gap:4px}
+  .bet-name{font-size:19px}
+  .odds{font-size:24px}
+  .bet-cond{font-size:10px}
+  .stake input{width:40px}
+  .place{min-height:72px;font-size:24px}
+  .place small{font-size:10px}
+  .powers{border-left:0;border-top:3px solid var(--ink);padding:10px}
+  .art{height:auto;width:min(100%,300px)}
+  .sec-dice{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"actions result" "track track";gap:8px;padding:10px;align-items:center}
+  .actions{grid-area:actions;flex:none;height:auto;width:100%}
+  .actions .btn.big{width:100%}
+  .result{grid-area:result}
+  .track{grid-area:track;width:100%;min-height:calc(var(--die) * 1.5)}
+  .ledger{height:auto;overflow:visible}
+  .log li{white-space:normal}
   .hint{text-align:center}
 }
 @media (prefers-reduced-motion:reduce){.devil{animation-duration:.01s}}
@@ -586,5 +608,3 @@ G=fresh(loadBest());
 startRound();
 render();
 </script>
-
-</body></html>

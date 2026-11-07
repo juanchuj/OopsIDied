@@ -1,0 +1,15 @@
+{
+  "name": "OOPS, I DIED!",
+  "short_name": "Oops, I Died",
+  "description": "A solo craps roguelike with Death.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ebe6da",
+  "theme_color": "#ebe6da",
+  "icons": [
+    { "src": "art/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "art/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
