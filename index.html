@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -63,7 +62,7 @@ button:disabled{cursor:not-allowed}
 .bet.won{outline:3px solid var(--bone);outline-offset:-7px}
 .bet.lost{opacity:.55}
 .bet-row{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;min-width:0}
-.bet-name{font-family:var(--display);font-weight:400;font-size:clamp(17px,3.8vh,30px);text-transform:uppercase;letter-spacing:.01em;line-height:.95;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bet-name{font-family:var(--display);font-weight:400;font-size:calc(clamp(17px,3.8vh,30px) * var(--k,1));text-transform:uppercase;letter-spacing:.01em;line-height:.95;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;word-break:break-word}
 .odds{font-family:var(--display);font-size:clamp(20px,4.6vh,38px);line-height:.95;font-variant-numeric:tabular-nums;flex:0 0 auto}
 .bet-cond{font-size:11px;line-height:1.2;color:var(--ink-2)}
 .stake{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
@@ -84,6 +83,7 @@ button:disabled{cursor:not-allowed}
 /* Finger artwork. The art is the background; the badges sit on the printed cost circles. */
 .powers{grid-area:powers;background:var(--paper);min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;border-left:3px solid var(--ink);overflow:hidden;padding:4px}
 .art{position:relative;height:100%;max-width:100%;aspect-ratio:695/1080;background:url("art/fingers.jpg") center/100% 100% no-repeat}
+.art.es{background-image:url("art/fingers_es.jpg")}
 .hot{position:absolute;transform:translate(-50%,-50%);width:7.2%;aspect-ratio:1;border-radius:50%;border:0;background:var(--ink);color:var(--bone);display:grid;place-items:center;padding:0;font-family:var(--display);font-size:clamp(13px,2.8vh,22px);line-height:1;font-variant-numeric:tabular-nums;z-index:1}
 .hot:not(:disabled):hover{background:var(--blood)}
 .hot:disabled{cursor:default}
@@ -133,6 +133,9 @@ button:disabled{cursor:not-allowed}
 .splash .keyhint{font-size:12px}
 .death .help-btn{margin-left:auto;flex:0 0 auto}
 
+.langs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn.on{background:var(--ink);color:var(--bone)}
+
 /* Help: the full rulebook, in a panel that scrolls on its own. */
 .help{flex:1 1 auto;min-height:min(70vh,560px);display:flex;flex-direction:column;border:3px solid var(--ink);background:var(--paper)}
 .help-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;background:var(--ink);color:var(--bone);flex:0 0 auto}
@@ -162,7 +165,7 @@ button:disabled{cursor:not-allowed}
   .mat{flex:0 0 auto;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;grid-template-areas:"table" "powers" "dice"}
   .table{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto}
   .bet{min-height:72px;gap:4px}
-  .bet-name{font-size:19px}
+  .bet-name{font-size:calc(19px * var(--k,1))}
   .odds{font-size:24px}
   .bet-cond{font-size:10px}
   .stake input{width:40px}
@@ -189,6 +192,135 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 }
 </script>
 <script>
+const LANG_KEY='oops-i-died-lang';
+const browserES=()=>(navigator.language||'').toLowerCase().startsWith('es');
+let LANG='en';
+try{ LANG=localStorage.getItem(LANG_KEY)||(browserES()?'es':'en'); }catch(e){ LANG=browserES()?'es':'en'; }
+function setLang(l){ LANG=l; try{localStorage.setItem(LANG_KEY,l);}catch(e){} document.documentElement.lang=l; }
+const pl=(n,s,p)=>Number(n)===1?s:p;
+const RANK_ES={'Worm Food':'Comida de gusano','Dead Meat':'Carne muerta','Grave Dodger':'Esquiva tumbas',"Death's Headache":'Dolor de cabeza de la Muerte','Undying':'Inmortal'};
+/* Spanish text. The game is written in English; these rules turn the rendered page into Spanish. */
+const ES_PATTERNS=[
+  [/Round (\d+)\. Death loans you (\d+) coins?\. Repay (\d+) when the round ends\./g,(m,a,b,c)=>`Ronda ${a}. La Muerte te presta ${b} ${pl(b,'moneda','monedas')}. Devuelve ${c} al final de la ronda.`],
+  [/Round (\d+) settled\./g,(m,n)=>`Ronda ${n} saldada.`],
+  [/Come-Out (\d+)\. Craps wins\./g,(m,n)=>`Salida ${n}. El craps gana.`],
+  [/Come-Out (\d+)\. Craps loses\./g,(m,n)=>`Salida ${n}. El craps pierde.`],
+  [/The Bird\. A losing (\d+) sets the Point instead\./g,(m,n)=>`Dedo del Medio. Un ${n} perdedor establece el Punto en su lugar.`],
+  [/The Point is (\d+)\. Roll it again before a 7\./g,(m,n)=>`El Punto es ${n}. Vuelve a sacarlo antes de un 7.`],
+  [/(\d+) again\. The Point is hit\. Craps wins\./g,(m,n)=>`${n} otra vez. Se acierta el Punto. El craps gana.`],
+  [/Rolled (\d+)\. Nothing happens\./g,(m,n)=>`Sacaste ${n}. No pasa nada.`],
+  [/Repaid Death (\d+)\./g,(m,n)=>`Pagaste ${n} a la Muerte.`],
+  [/Death takes your last (\d+) coins?/g,(m,n)=>`La Muerte se lleva tus últimas ${n} ${pl(n,'moneda','monedas')}`],
+  [/Choose (\d+) fingers to surrender\./g,(m,n)=>`Elige ${n} dedos para entregar.`],
+  [/Choose (\d+) more fingers to surrender\./g,(m,n)=>`Elige ${n} dedos más para entregar.`],
+  [/(\d+) fingers? to surrender\./g,(m,n)=>`${n} ${pl(n,'dedo','dedos')} para entregar.`],
+  [/(\d+) fingers? left\./g,(m,n)=>`${n} ${pl(n,'dedo restante','dedos restantes')}.`],
+  [/Final rank: ([^<>"]+?), reached round (\d+)\./g,(m,a,n)=>`Rango final: ${RANK_ES[a]||a}, llegaste a la ronda ${n}.`],
+  [/([^<>"]+?) finger gone\. ([^<>"]+?) is lost for good\./g,(m,a,b)=>`Dedo ${a} perdido. ${b} se pierde para siempre.`],
+  [/([^<>"]+?) pays (\d+)\./g,(m,a,n)=>`${a} paga ${n}.`],
+  [/([^<>"]+?) loses (\d+)\./g,(m,a,n)=>`${a} pierde ${n}.`],
+  [/Buy ([^<>"]+?) for (\d+)/g,(m,a,n)=>`Comprar ${a} por ${n}`],
+  [/Remove ([^<>"]+?) for (\d+)/g,(m,a,n)=>`Quitar ${a} por ${n}`],
+  [/Die (\d), showing (\d)/g,(m,a,b)=>`Dado ${a}, muestra ${b}`],
+  [/Die (\d)\b/g,(m,a)=>`Dado ${a}`],
+  [/Roll for (\d+)/g,(m,n)=>`Lanza para ${n}`],
+  [/Hit (\d+) to win\. A 7 loses\./g,(m,n)=>`Saca ${n} para ganar. Un 7 pierde.`],
+  [/(\d+) coins? left to place\. Spend them all\./g,(m,n)=>`Faltan ${n} ${pl(n,'moneda','monedas')} por colocar. ¡Gástalas todas!`],
+  [/(\d+) coins? left to place/g,(m,n)=>`Faltan ${n} ${pl(n,'moneda','monedas')} por colocar`],
+  [/(\d+) coins? on the mat/g,(m,n)=>`${n} ${pl(n,'moneda','monedas')} en la mesa`],
+  [/(\d+) coins? on this bet/g,(m,n)=>`${n} ${pl(n,'moneda','monedas')} en esta apuesta`],
+  [/Total (\d+)/g,(m,n)=>`Total ${n}`]
+];
+const ES_PAIRS=[
+  ["Spacebar to roll","Barra espaciadora para lanzar"],["How to play","Cómo jugar"],["Play again","Jugar otra vez"],["Play","Jugar"],
+  ["Back to the table","Volver a la mesa"],["Lock bets and roll","Bloquear apuestas y lanzar"],["Rolling…","Lanzando…"],
+  ["Take the roll","Acepta la tirada"],["Reroll both","Relanzar ambos"],["Reroll one","Relanzar uno"],["Cancel","Cancelar"],
+  ["Roll the come-out","Lanza la salida"],["7 or 11 wins. 2, 3, or 12 loses. Anything else sets the Point.","7 u 11 gana. 2, 3 o 12 pierde. Cualquier otro número establece el Punto."],
+  ["Tap the die to reroll.","Toca el dado para relanzarlo."],["Ring-a-Ding doubles one winning profit.","Anillo Ding-Dong duplica una ganancia ganadora."],
+  ["Every coin is spoken for.","Cada moneda ya está apostada."],["Bets are on the mat","Las apuestas están en la mesa"],
+  ["Place your bets.","Haz tus apuestas."],["Place<br>your bets","Haz tus<br>apuestas"],["No coins","Sin monedas"],["No result yet","Sin resultado aún"],
+  ["Remove one coin from","Quitar una moneda de"],["Add one coin to","Añadir una moneda a"],["Coins on","Monedas en"],
+  ["Spacebar","Barra espaciadora"],["Escape","Esc"],["Help","Ayuda"],["All","Todo"],["Bets","Apuestas"],["Ledger","Registro"],
+  ["Finger powerups","Poderes de los dedos"],["Coins received","Monedas recibidas"],["Repay Death","Pagar a la Muerte"],
+  ["Best round","Mejor ronda"],["Round","Ronda"],["Coins","Monedas"],["Fingers","Dedos"],
+  ["OOPS, I DIED! cover: a grim reaper skull with dice","Portada de OOPS, I DIED!: calavera de la Muerte con dados"],
+  ["Thumbs Up. Both dice rerolled. Only the new result counts.","Pulgar arriba. Ambos dados relanzados. Solo cuenta el nuevo resultado."],
+  ["Thumbs Up. Both dice rerolled.","Pulgar arriba. Ambos dados relanzados."],
+  ["Point Taken. Tap the die you want to reroll.","Punto robado. Toca el dado que quieras relanzar."],
+  ["Reroll cancelled.","Relanzamiento cancelado."],
+  ["Point Taken. One die rerolled. Only the new result counts.","Punto robado. Un dado relanzado. Solo cuenta el nuevo resultado."],
+  ["Point Taken. One die rerolled.","Punto robado. Un dado relanzado."],
+  ["Spend every coin before the dice fly. Death does not accept savings.","Gasta cada moneda antes de lanzar los dados. La Muerte no acepta ahorros."],
+  ["Bets are locked. Let the dice decide.","Apuestas cerradas. Que decidan los dados."],
+  ["Seven out. Craps loses.","Siete fuera. El craps pierde."],
+  ["Pinky Promise broken. One more finger.","Promesa rota. Un dedo más."],
+  ["Choose one more finger to surrender.","Elige un dedo más para entregar."],
+  ["Choose a finger to surrender.","Elige un dedo para entregar."],
+  ["and one finger.","y un dedo."],
+  ["Death thanks you for your patronage. He'd shake your hand, but... well.","La Muerte te agradece tu clientela. Te daría la mano, pero... bueno."],
+  ["Congratulations! You're still dead.","¡Felicidades! Sigues muerto."],
+  ["You beat the house.","Le ganaste a la casa."],["The house beat you.","La casa te ganó."],
+  ["Worm Food","Comida de gusano"],["Dead Meat","Carne muerta"],["Grave Dodger","Esquiva tumbas"],["Death's Headache","Dolor de cabeza de la Muerte"],["Undying","Inmortal"],
+  ["Thumbs Up is lost","Pulgar arriba perdido"],["Point Taken is lost","Punto robado perdido"],["The Bird is lost","Dedo del Medio perdido"],["Ring-a-Ding is lost","Anillo Ding-Dong perdido"],["Pinky Promise is lost","Jura del Meñique perdida"],
+  ["Thumbs Up","Pulgar arriba"],["Point Taken","Punto robado"],["The Bird","Dedo del Medio"],["Ring-a-Ding","Anillo Ding-Dong"],["Pinky Promise","Jura del Meñique"],
+  ["Reroll both dice once.","Vuelve a lanzar ambos dados una vez."],["Reroll one die once. Tap the die to reroll.","Vuelve a lanzar un dado una vez. Toca el dado para relanzarlo."],
+  ["Reroll one die once.","Vuelve a lanzar un dado una vez."],["A losing Come-Out roll sets a Point instead.","Una salida perdedora establece un Punto en su lugar."],
+  ["A losing Come-Out roll establishes a Point instead.","Una salida perdedora establece un Punto en su lugar."],
+  ["Double the profit of one winning bet.","Duplica la ganancia de una apuesta ganadora."],
+  ["If craps wins, repay Death 1× instead of 2×. If craps loses, lose a finger.","Si gana el craps, paga a la Muerte 1× en vez de 2×. Si pierde el craps, pierde un dedo."],
+  ["Pass Line","Línea de la Parca"],["Point Hunter","Caza Puntos"],["Lucky Seven","Septimo Cielo"],["Eleven Heaven","Once Sagrado"],["Snake Eyes","Ojos de Serpiente"],
+  ["Win the craps round","Gana la ronda de craps"],["Win by hitting the Point","Gana acertando el Punto"],["Roll 7 on the Come-Out","Saca 7 en la salida"],
+  ["Roll 11 on the Come-Out","Saca 11 en la salida"],["Roll double ones on the Come-Out","Saca dos unos en la salida"],
+  ["Thumb","Pulgar"],["Index","Índice"],["Middle","Medio"],["Ring","Anular"],["Pinky","Meñique"],["Finger","Dedo"],["Powerup","Poder"],
+  ["Introduction","Introducción"],["Objective","Objetivo"],
+  ["Oops. You died. That's not good… Lucky for you, Death wants to make a deal. Beat him at dice, and you might just buy yourself some more time. Let's hope your luck lasts.","Oops. Has muerto. Eso no es bueno… Por suerte, la Muerte quiere hacer un trato. Véncelo a los dados y quizá te compres un poco más de tiempo. Esperemos que tu suerte dure."],
+  ["Your fingers certainly won't…","Tus dedos, desde luego, no…"],
+  ["Survive as many rounds as possible before Death collects all five of your fingers. Your score is the highest round you complete.","Sobrevive el mayor número de rondas posible antes de que la Muerte cobre tus cinco dedos. Tu puntaje es la ronda más alta que completas."],
+  ["You need two six-sided dice, coins, a playmat, and five fingers. In this web version, the dice, coins and playmat are all on screen.","Necesitas dos dados de seis caras, monedas, un tapete de juego y cinco dedos. En esta versión web, los dados, las monedas y el tapete están todos en pantalla."],
+  ["1. Starting the game","1. Cómo empezar"],["Start with 5 fingers, 0 coins, and all five powerups available.","Empiezas con 5 dedos, 0 monedas y los cinco poderes disponibles."],
+  ["Begin at Round 1. Each round, Death gives you coins equal to the round number.","Empiezas en la Ronda 1. Cada ronda, la Muerte te da monedas igual al número de la ronda."],
+  ["2. Playing craps","2. Cómo jugar al craps"],["Come-Out Roll.","Lanzamiento de salida."],["Roll two dice.","Lanza dos dados."],
+  ["7 or 11: win.","7 u 11: ganas."],["2, 3 or 12: lose.","2, 3 o 12: pierdes."],["Any other result: establish the Point.","Cualquier otro resultado: establece el Punto."],
+  ["Point rolls.","Lanzamientos del Punto."],["Keep rolling until you roll the Point again (win) or a 7 (lose). Other rolls do nothing.","Sigue lanzando hasta sacar el Punto de nuevo (ganas) o un 7 (pierdes). Las demás tiradas no hacen nada."],
+  ["3. The betting table","3. La mesa de apuestas"],["<th>Bet</th>","<th>Apuesta</th>"],["<th>Winning condition</th>","<th>Condición de victoria</th>"],["<th>Profit</th>","<th>Ganancia</th>"],
+  ["Winning bets return the wager plus profit. Losing bets are forfeited.","Las apuestas ganadoras devuelven lo apostado más la ganancia. Las perdedoras se pierden."],
+  ["You may split coins across multiple bets, but must do something with <b>all</b> your coins each round (no saving for later). Multiple bets may win in the same round.","Puedes repartir monedas entre varias apuestas, pero debes usar <b>todas</b> tus monedas cada ronda (no se puede ahorrar). Varias apuestas pueden ganar en la misma ronda."],
+  ["4. Finger powerups","4. Poderes de los dedos"],
+  ["After placing bets, but before rolling, you may buy each available powerup once per round.","Después de apostar, pero antes de lanzar, puedes comprar cada poder disponible una vez por ronda."],
+  ["<th>Finger</th>","<th>Dedo</th>"],["<th>Powerup</th>","<th>Poder</th>"],["<th>Cost</th>","<th>Coste</th>"],["<th>Effect</th>","<th>Efecto</th>"],
+  ["Purchase powerups after betting, before the first roll.","Compra los poderes después de apostar y antes del primer lanzamiento."],
+  ["Rerolls may be used during either phase.","Los relanzamientos se pueden usar en cualquiera de las dos fases."],
+  ["Rerolling replaces the original dice result completely. Only the new result counts.","Relanzar reemplaza por completo el resultado original. Solo cuenta el nuevo."],
+  ["Only collect winnings after rolling dice is done (no rerolls after collecting from a bet).","Cobra las ganancias solo cuando termines de lanzar (no se puede relanzar después de cobrar una apuesta)."],
+  ["Unused powerups stay in your inventory. You can still use them in later rounds.","Los poderes no usados se quedan en tu inventario. Puedes usarlos en rondas posteriores."],
+  ["Losing a finger permanently removes its powerup.","Perder un dedo elimina su poder para siempre."],
+  ["You choose which finger to sacrifice.","Tú eliges qué dedo sacrificar."],
+  ["5. Paying Death","5. Pagar a la Muerte"],["At the end of each round, repay Death double the round number.","Al final de cada ronda, paga a la Muerte el doble del número de la ronda."],
+  ["<th>Round</th>","<th>Ronda</th>"],["<th>Repayment</th>","<th>Pago</th>"],
+  ["<b>Can pay:</b> pay Death, keep the rest, and advance.","<b>Puedes pagar:</b> paga a la Muerte, quédate con el resto y avanza."],
+  ["<b>Can't pay:</b> give Death all your coins, lose a finger, and advance with zero coins.","<b>No puedes pagar:</b> entrega todas tus monedas a la Muerte, pierde un dedo y avanza con cero monedas."],
+  ["6. Game over","6. Fin del juego"],
+  ["When you lose your fifth and final finger, the game ends. Your score is the round you reached. Death thanks you for your patronage. He'd shake your hand, but… well.","Cuando pierdas tu quinto y último dedo, el juego termina. Tu puntaje es la ronda que alcanzaste. La Muerte te agradece tu clientela. Te daría la mano, pero… bueno."],
+  ["<th>Round reached</th>","<th>Ronda alcanzada</th>"],["<th>Rank</th>","<th>Rango</th>"],
+  ["Bonus: 2-player mode","Extra: modo de 2 jugadores"],
+  ["Each player needs their own dice, coins and playmat. Play side by side using the normal rules. When both players have lost all five fingers, whoever reached the highest round wins. Death still wins, obviously.","Cada jugador necesita sus propios dados, monedas y tapete. Jueguen lado a lado con las reglas normales. Cuando ambos jugadores hayan perdido los cinco dedos, gana quien llegó a la ronda más alta. La Muerte siempre gana, por supuesto."],
+  ["Two-player mode is in the booklet but not yet in this web version.","El modo de 2 jugadores está en el folleto, pero aún no en esta versión web."],
+  ["Controls","Controles"],
+  ["<b>Spacebar</b> presses the main button: Lock bets and roll, then Roll for the Point, then Take the roll.","<b>La barra espaciadora</b> pulsa el botón principal: Bloquear apuestas y lanzar, luego Lanza para el Punto, luego Acepta la tirada."],
+  ["<b>Escape</b> closes this page.","<b>Escape</b> cierra esta página."],
+  ["Tap a stake box to type a bet, or use − / + / All.","Toca una casilla de apuesta para escribir, o usa − / + / Todo."],
+  ["Roll for the Point","Lanza para el Punto"],["Round reached","Ronda alcanzada"],["Winning condition","Condición de victoria"],
+  ["Effect","Efecto"],["Cost","Coste"],["Profit","Ganancia"],["Rank","Rango"],
+  ["Finger powerups","Poderes de los dedos"],["Repayment","Pago"],["Death","La Muerte"]
+].sort((a,b)=>b[0].length-a[0].length);
+function toSpanish(html){
+  let out=html;
+  for(const [re,rep] of ES_PATTERNS) out=out.replace(re,rep);
+  for(const [en,es] of ES_PAIRS) out=out.split(en).join(es);
+  return out;
+}
+
+document.documentElement.lang=LANG;
 const POWER=[
   {id:'thumb',finger:'Thumb',name:'Thumbs Up',cost:2,desc:'Reroll both dice once.',pos:[79.1,32.9]},
   {id:'index',finger:'Index',name:'Point Taken',cost:3,desc:'Reroll one die once. Tap the die to reroll.',pos:[6.8,5.1]},
@@ -500,7 +632,8 @@ function peekDevil(){
 
 function splashView(){
   return `<section class="splash">
-    <img class="splash-art" src="art/splash.png" alt="OOPS, I DIED! cover: a grim reaper skull with dice">
+    <img class="splash-art" src="${LANG==='es'?'art/splash_es.jpg':'art/splash.png'}" alt="OOPS, I DIED! cover: a grim reaper skull with dice">
+    <div class="langs"><button class="btn ghost ${LANG==='en'?'on':''}" data-act="lang" data-lang="en">English</button><button class="btn ghost ${LANG==='es'?'on':''}" data-act="lang" data-lang="es">Español</button></div>
     <button class="btn big" data-act="start">Play</button>
     <p class="keyhint">Spacebar to roll</p>
     <button class="btn ghost" data-act="help">How to play</button>
@@ -614,7 +747,7 @@ function view(){
     <div class="stat"><span>Best round</span><b>${G.best||'–'}</b></div>
   </div>`;
 
-  const banner=`<div class="death" role="status" aria-live="polite"><span class="who">Death</span><p>${G.msg||'Place your bets.'}</p><button class="btn ghost help-btn" data-act="help">Help</button></div>`;
+  const banner=`<div class="death" role="status" aria-live="polite"><span class="who">Death</span><p>${G.msg||'Place your bets.'}</p><button class="btn ghost help-btn" data-act="lang-toggle" aria-label="Language">${LANG==='en'?'ES':'EN'}</button><button class="btn ghost" data-act="help">Help</button></div>`;
 
   const betsHTML=BETS.map(b=>{
     const st=G.stakes[b.id]||0;
@@ -629,7 +762,7 @@ function view(){
         </div>`
       : `<div class="stake-fixed">${st?`${st} coin${st===1?'':'s'} on the mat`:'No coins'}</div>`;
     return `<div class="bet ${b.cell} ${state}">
-      <div class="bet-row"><b class="bet-name">${b.name}</b><span class="odds">${b.odds}:1</span></div>
+      <div class="bet-row"><b class="bet-name" style="--k:${[1,.7,1.12,.9,1.04][BETS.indexOf(b)]}">${b.name}</b><span class="odds">${b.odds}:1</span></div>
       <div class="bet-cond">${b.cond}</div>
       ${stakeUI}
       ${coinsHTML(st)}
@@ -690,7 +823,7 @@ function view(){
       ${placeTile}
     </section>
     <section class="powers" aria-label="Finger powerups">
-      <div class="art">${hotHTML}</div>
+      <div class="art ${LANG==='es'?'es':''}">${hotHTML}</div>
     </section>
     <section class="sec-dice">
       <div class="actions">${controls}</div>
@@ -732,7 +865,8 @@ function coinsHTML(n){
 }
 
 function render(){
-  document.getElementById('app').innerHTML=view();
+  const html=view();
+  document.getElementById('app').innerHTML=LANG==='es'?toSpanish(html):html;
 }
 
 const app=document.getElementById('app');
@@ -756,6 +890,8 @@ app.addEventListener('click',e=>{
     case 'restart': restart(); break;
     case 'help': G.help=true; break;
     case 'help-close': G.help=false; break;
+    case 'lang': setLang(t.dataset.lang); break;
+    case 'lang-toggle': setLang(LANG==='en'?'es':'en'); break;
   }
   render();
 });
@@ -785,5 +921,3 @@ G=fresh(loadBest());
 startRound();
 render();
 </script>
-
-</body></html>
