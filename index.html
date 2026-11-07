@@ -1,0 +1,590 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>OOPS, I DIED!</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Layout: the rulebook playmat. Bet cards on the left, the bone-finger artwork on the right with live cost badges placed on it. Nothing scrolls. */
+:root{
+  --paper:#ebe6da; --bone:#f6f2e8; --ink:#121110; --ink-2:#4b4740; --blood:#9e1f17;
+  --display:"Anton","Impact",sans-serif; --body:"Courier Prime","Courier New",monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:14px; line-height:1.35;
+  background-image:radial-gradient(rgba(18,17,16,.07) 1px,transparent 1.3px);
+  background-size:7px 7px;
+  padding-left:max(14px,env(safe-area-inset-left,0px));
+  padding-right:max(14px,env(safe-area-inset-right,0px));
+  padding-top:10px; padding-bottom:10px;
+}
+button{font:inherit;cursor:pointer;color:inherit}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:3px solid var(--blood);outline-offset:2px}
+#app{max-width:940px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:8px;min-height:0}
+
+.splash{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:3px solid var(--ink);background:var(--paper);padding:14px}
+.splash-art{flex:1 1 auto;min-height:0;max-width:100%;width:auto;object-fit:contain;display:block}
+.splash .btn.big{background:var(--ink);color:var(--bone)}
+
+.stats{flex:0 0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.stat{border:2px solid var(--ink);padding:3px 8px;background:var(--bone);min-width:0}
+.stat span{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b{font-family:var(--display);font-weight:400;font-size:clamp(20px,4.4vh,30px);line-height:1.05;font-variant-numeric:tabular-nums}
+
+.death{flex:0 0 auto;display:flex;gap:10px;align-items:center;background:var(--ink);color:var(--bone);padding:7px 12px;min-width:0}
+.death .who{font-family:var(--display);font-size:16px;letter-spacing:.06em;text-transform:uppercase;min-width:52px;color:var(--bone)}
+.death p{margin:0;min-width:0;font-size:13px}
+
+/* The mat: table on the left, the finger artwork on the right, dice tray across the bottom. The dice may fly over the mat. */
+.mat{flex:1 1 auto;min-height:0;min-width:0;border:3px solid var(--ink);background:var(--paper);overflow:visible;position:relative;
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;
+  grid-template-areas:"table powers" "dice dice"}
+
+.table{grid-area:table;background:var(--ink);padding:8px;min-height:0;min-width:0;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:8px;
+  grid-template-areas:"pass pass" "hunter seven" "eleven eleven" "place eyes"}
+.b-pass{grid-area:pass} .b-hunter{grid-area:hunter} .b-seven{grid-area:seven}
+.b-eleven{grid-area:eleven} .b-eyes{grid-area:eyes}
+
+.bet{background:var(--bone);color:var(--ink);padding:6px 8px;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:space-between;gap:2px;overflow:hidden}
+.bet.won{outline:3px solid var(--bone);outline-offset:-7px}
+.bet.lost{opacity:.55}
+.bet-row{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;min-width:0}
+.bet-name{font-family:var(--display);font-weight:400;font-size:clamp(17px,3.8vh,30px);text-transform:uppercase;letter-spacing:.01em;line-height:.95;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.odds{font-family:var(--display);font-size:clamp(20px,4.6vh,38px);line-height:.95;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.bet-cond{font-size:11px;line-height:1.2;color:var(--ink-2)}
+.stake{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
+.stake input{width:44px;height:26px;font:inherit;font-weight:700;font-size:13px;text-align:center;padding:0 2px;background:var(--ink);color:var(--bone);border:0;font-variant-numeric:tabular-nums;min-width:0}
+.stake button{background:transparent;color:var(--ink);border:2px solid var(--ink);width:26px;height:26px;font-family:var(--display);font-size:14px;line-height:1;padding:0}
+.stake button.mini{width:auto;font-family:var(--body);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:0 6px;background:var(--ink);color:var(--bone)}
+.stake-fixed{font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}
+
+.place{grid-area:place;min-width:0;min-height:0;display:flex;flex-direction:column;justify-content:center;color:var(--bone);font-family:var(--display);text-transform:uppercase;line-height:.88;font-size:clamp(22px,5.4vh,46px);overflow:hidden}
+.place small{font-family:var(--body);font-size:11px;text-transform:none;line-height:1.3;margin-top:6px;opacity:.85}
+
+/* Finger artwork. The art is the background; the badges sit on the printed cost circles. */
+.powers{grid-area:powers;background:var(--paper);min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;border-left:3px solid var(--ink);overflow:hidden;padding:4px}
+.art{position:relative;height:100%;max-width:100%;aspect-ratio:695/1080;background:url("art/fingers.jpg") center/100% 100% no-repeat}
+.hot{position:absolute;transform:translate(-50%,-50%);width:7.2%;aspect-ratio:1;border-radius:50%;border:0;background:var(--ink);color:var(--bone);display:grid;place-items:center;padding:0;font-family:var(--display);font-size:clamp(13px,2.8vh,22px);line-height:1;font-variant-numeric:tabular-nums;z-index:1}
+.hot:not(:disabled):hover{background:var(--blood)}
+.hot:disabled{cursor:default}
+.hot.on{box-shadow:0 0 0 3px var(--blood),0 0 0 5px var(--bone)}
+.hot.gone{background:var(--paper);color:var(--blood);box-shadow:0 0 0 2px var(--blood)}
+
+/* Dice tray: the dice travel across the whole tray, from the left margin to the action button. */
+.sec-dice{grid-area:dice;background:var(--bone);border-top:3px solid var(--ink);padding:6px 10px;min-height:0;min-width:0;display:flex;align-items:center;gap:12px}
+.track{position:relative;flex:1 1 auto;min-width:0;align-self:stretch;--die:clamp(40px,8.6vh,64px);min-height:var(--die)}
+.lane{position:absolute;inset:0;z-index:4;pointer-events:none}
+.die{position:absolute;top:50%;width:var(--die);height:var(--die);margin-top:calc(var(--die) / -2);left:calc((100% - var(--die)) * var(--f,0));
+  --r:-2deg;transform:rotate(var(--r));
+  background:var(--bone);border:3px solid var(--ink);border-radius:12px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:7px;gap:1px;box-shadow:4px 4px 0 var(--ink);pointer-events:auto}
+.die:nth-child(2){--r:2deg}
+.die i{align-self:center;justify-self:center;width:clamp(6px,1.4vh,11px);height:clamp(6px,1.4vh,11px);border-radius:50%}
+.die i.pip{background:var(--ink)}
+.die.picking{outline:3px dashed var(--blood);outline-offset:4px}
+.die.idle{opacity:.4}
+
+/* The total pops out as a comic burst between the dice. Only the result shows. */
+.sum{position:absolute;top:50%;left:calc((100% - var(--die)) * var(--mid,0.5) + var(--die) / 2);width:clamp(64px,13vh,96px);aspect-ratio:1;display:grid;place-items:center;background:var(--ink);color:var(--bone);font-family:var(--display);font-size:clamp(28px,6vh,48px);line-height:1;font-variant-numeric:tabular-nums;clip-path:polygon(50% 0%,61% 16%,79% 6%,80% 25%,97% 25%,89% 41%,100% 52%,89% 62%,98% 78%,80% 77%,79% 94%,61% 86%,50% 100%,39% 86%,21% 94%,20% 77%,2% 78%,11% 62%,0% 52%,11% 41%,3% 25%,20% 25%,21% 6%,39% 16%);transform:translate(-50%,-50%);animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.2)}100%{transform:translate(-50%,-50%) scale(1)}}
+
+/* Death pops out from a side of the mat mid-roll, shows his face, and slides back out of sight. */
+.devil{position:absolute;top:18%;width:clamp(96px,24vh,160px);height:auto;z-index:6;pointer-events:none}
+.devil.left{left:0;animation:peek-left 1.7s ease-in-out both}
+.devil.right{right:0;animation:peek-right 1.7s ease-in-out both}
+@keyframes peek-left{0%{transform:translateX(-105%)}30%,70%{transform:translateX(0)}100%{transform:translateX(-105%)}}
+@keyframes peek-right{0%{transform:translateX(105%)}30%,70%{transform:translateX(0)}100%{transform:translateX(105%)}}
+
+.controls{display:flex;align-items:center;gap:12px;min-width:0;width:100%;height:clamp(64px,12vh,84px);flex:1 1 auto}
+.actions{flex:0 0 min(260px,30%);min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+/* Fixed-size action button, so its width and position never change between states */
+.actions .btn.big{width:min(100%,260px);text-align:center}
+/* The result slot: a die-shaped box beside the action button. It stays empty until the dice land. */
+.result{flex:0 0 auto;width:clamp(44px,9vh,66px);aspect-ratio:1;display:grid;place-items:center;background:var(--bone);color:var(--ink);border:3px solid var(--ink);border-radius:12px;font-family:var(--display);font-size:clamp(22px,4.6vh,36px);line-height:1;font-variant-numeric:tabular-nums}
+.result.empty{background:transparent;box-shadow:none;border-style:dashed;border-color:var(--ink-2)}
+.row{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn{font-family:var(--display);font-size:16px;letter-spacing:.04em;text-transform:uppercase;background:var(--ink);color:var(--bone);border:2px solid var(--ink);padding:5px 12px;min-height:34px;line-height:1.1}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.big{font-size:20px;padding:7px 14px;min-height:40px}
+.btn:disabled{background:#a7a396;border-color:#a7a396;color:#eeeadf;opacity:1;cursor:default}
+.hint{font-size:11px;color:var(--ink-2);text-align:right;margin:0;line-height:1.25}
+
+.ledger{flex:0 0 auto;height:clamp(52px,10vh,80px);overflow:hidden;border-top:2px solid var(--ink);padding-top:4px}
+.log{list-style:none;padding:0;margin:0;font-size:12px}
+.log li{padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px dotted var(--ink-2)}
+
+/* Narrow screens: stack the mat and the tray so everything stays on screen. */
+@media (max-width:640px){
+  .stat span{font-size:9px}
+  .mat{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;grid-template-areas:"table" "powers" "dice"}
+  .table{grid-template-rows:auto auto auto auto}
+  .powers{border-left:0;border-top:3px solid var(--ink)}
+  .art{height:auto;width:min(100%,380px)}
+  .sec-dice{flex-direction:column}
+  .track{flex:0 0 auto;width:100%;min-height:calc(var(--die) * 1.4)}
+  .controls{align-items:center}
+  .row{justify-content:center}
+  .hint{text-align:center}
+}
+@media (prefers-reduced-motion:reduce){.devil{animation-duration:.01s}}
+</style>
+<div id="app"></div>
+<script>
+const POWER=[
+  {id:'thumb',finger:'Thumb',name:'Thumbs Up',cost:2,desc:'Reroll both dice once.',pos:[79.1,32.9]},
+  {id:'index',finger:'Index',name:'Point Taken',cost:3,desc:'Reroll one die once. Tap the die to reroll.',pos:[6.8,5.1]},
+  {id:'middle',finger:'Middle',name:'The Bird',cost:1,desc:'A losing Come-Out roll sets a Point instead.',pos:[7.2,21.5]},
+  {id:'ring',finger:'Ring',name:'Ring-a-Ding',cost:4,desc:'Double the profit of one winning bet.',pos:[65.5,54.6]},
+  {id:'pinky',finger:'Pinky',name:'Pinky Promise',cost:1,desc:'If craps wins, repay Death 1× instead of 2×. If craps loses, lose a finger.',pos:[5.8,88.9]}
+];
+const BETS=[
+  {id:'pass',name:'Pass Line',cond:'Win the craps round',odds:1,cell:'b-pass'},
+  {id:'hunter',name:'Point Hunter',cond:'Win by hitting the Point',odds:2,cell:'b-hunter'},
+  {id:'seven',name:'Lucky Seven',cond:'Roll 7 on the Come-Out',odds:4,cell:'b-seven'},
+  {id:'eleven',name:'Eleven Heaven',cond:'Roll 11 on the Come-Out',odds:15,cell:'b-eleven'},
+  {id:'eyes',name:'Snake Eyes',cond:'Roll double ones on the Come-Out',odds:30,cell:'b-eyes'}
+];
+const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const BEST_KEY='oops-i-died-best';
+const d6=()=>1+Math.floor(Math.random()*6);
+const POW=id=>POWER.find(p=>p.id===id);
+
+function loadBest(){try{return Number(localStorage.getItem(BEST_KEY))||0;}catch(e){return 0;}}
+function saveBest(n){try{localStorage.setItem(BEST_KEY,String(n));}catch(e){}}
+function rank(r){
+  if(r>=15) return 'Undying';
+  if(r>=12) return "Death's Headache";
+  if(r>=9) return 'Grave Dodger';
+  if(r>=6) return 'Dead Meat';
+  return 'Worm Food';
+}
+
+let G;
+function fresh(best){
+  return {
+    round:1, coins:0, inPlay:0, alive:POWER.map(p=>p.id),
+    stakes:{}, bought:{}, rerolls:{}, stage:'bet', phase:'come', point:null,
+    dice:[0,0], dicePos:[0.4,0.6], pickDie:false, res:{}, ringTarget:null, loseQ:0, rolling:false,
+    log:[], msg:'', over:false, best, screen:'splash'
+  };
+}
+function say(t){G.msg=t; G.log.unshift(t); if(G.log.length>40) G.log.length=40;}
+function note(t){G.log.unshift(t); if(G.log.length>40) G.log.length=40;}
+
+const costTotal=()=>POWER.filter(p=>G.bought[p.id]).reduce((s,p)=>s+p.cost,0);
+const stakeTotal=()=>Object.values(G.stakes).reduce((a,b)=>a+b,0);
+const remaining=()=>G.coins-stakeTotal()-costTotal();
+
+function startRound(){
+  G.coins+=G.round;
+  G.stakes={}; G.bought={}; G.rerolls={}; G.stage='bet'; G.phase='come';
+  G.point=null; G.res={}; G.ringTarget=null; G.pickDie=false; G.dice=[0,0];
+  say(`Round ${G.round}. Death loans you ${G.round} coin${G.round>1?'s':''}. Repay ${2*G.round} when the round ends.`);
+}
+
+function setStake(id,n){
+  if(G.stage!=='bet') return;
+  n=Math.max(0,Math.floor(Number(n)||0));
+  const cur=G.stakes[id]||0;
+  n=Math.min(n,cur+remaining());
+  if(n>0) G.stakes[id]=n; else delete G.stakes[id];
+}
+
+function toggleBuy(id){
+  if(G.stage!=='bet'||!G.alive.includes(id)) return;
+  if(G.bought[id]){delete G.bought[id]; return;}
+  const p=POW(id);
+  if(remaining()<p.cost){G.msg=`${p.name} costs ${p.cost}. You have no coins left to spend on it.`; return;}
+  G.bought[id]=true;
+}
+
+function doRoll(){
+  if(G.rolling) return;
+  if(G.stage==='bet'){
+    if(remaining()!==0||G.coins<=0){G.msg='Spend every coin before the dice fly. Death does not accept savings.'; return;}
+    G.inPlay=G.coins; G.coins=0;
+    G.rerolls={thumb:!!G.bought.thumb,index:!!G.bought.index};
+    G.msg='Bets are locked. Let the dice decide.';
+  } else if(G.stage!=='await-roll') return;
+  G.stage='rolling'; G.rolling=true; G.dicePos=[0.4,0.6];
+  render();
+  animateDice([d6(),d6()],()=>{ G.stage='pending'; render(); landDice(); });
+  peekDevil();
+}
+
+function rerollBoth(){
+  if(G.stage!=='pending'||!G.rerolls.thumb||G.rolling) return;
+  G.rerolls.thumb=false;
+  note('Thumbs Up. Both dice rerolled.');
+  G.msg='Thumbs Up. Both dice rerolled. Only the new result counts.';
+  G.rolling=true; G.dicePos=[0.4,0.6]; render();
+  animateDice([d6(),d6()],()=>{ render(); landDice(); });
+  peekDevil();
+}
+function togglePickDie(){
+  if(G.stage!=='pending'||!G.rerolls.index) return;
+  G.pickDie=!G.pickDie;
+  G.msg=G.pickDie?'Point Taken. Tap the die you want to reroll.':'Reroll cancelled.';
+}
+function rerollDie(i){
+  if(!G.pickDie||G.stage!=='pending') return;
+  G.dice[i]=d6(); G.dicePos[i]=Math.random(); G.pickDie=false; G.rerolls.index=false;
+  note('Point Taken. One die rerolled.');
+  G.msg='Point Taken. One die rerolled. Only the new result counts.';
+}
+
+function evaluate(){
+  const [a,b]=G.dice, s=a+b, r=G.res;
+  if(G.phase==='come'){
+    r.eyes=(a===1&&b===1)?'win':'lose';
+    r.seven=s===7?'win':'lose';
+    r.eleven=s===11?'win':'lose';
+    if(s===7||s===11){ r.pass='win'; say(`Come-Out ${s}. Craps wins.`); return true; }
+    if(s===2||s===3||s===12){
+      if(G.bought.middle){ G.point=s; G.phase='point'; say(`The Bird. A losing ${s} sets the Point instead.`); return false; }
+      r.pass='lose'; say(`Come-Out ${s}. Craps loses.`); return true;
+    }
+    G.point=s; G.phase='point'; say(`The Point is ${s}. Roll it again before a 7.`); return false;
+  }
+  if(s===G.point){ r.pass='win'; r.hunter='win'; say(`${s} again. The Point is hit. Craps wins.`); return true; }
+  if(s===7){ r.pass='lose'; say('Seven out. Craps loses.'); return true; }
+  say(`Rolled ${s}. Nothing happens.`); return false;
+}
+
+function accept(){
+  if(G.stage!=='pending'||G.rolling) return;
+  G.pickDie=false;
+  const decided=evaluate();
+  if(decided){
+    if(G.bought.ring && BETS.some(b=>G.stakes[b.id] && G.res[b.id]==='win')) G.stage='choose-ring';
+    else finishRound();
+  } else G.stage='await-roll';
+}
+
+function pickRing(id){
+  if(G.stage!=='choose-ring') return;
+  G.ringTarget=id; finishRound();
+}
+
+function finishRound(){
+  const r=G.res, craps=r.pass==='win';
+  let back=0; const lines=[];
+  for(const b of BETS){
+    const st=G.stakes[b.id]||0; if(!st) continue;
+    if(r[b.id]==='win'){
+      const profit=st*b.odds*(G.ringTarget===b.id?2:1);
+      back+=st+profit; lines.push(`${b.name} pays ${st+profit}.`);
+    } else lines.push(`${b.name} loses ${st}.`);
+  }
+  G.coins=back; G.inPlay=0;
+  const pinky=!!G.bought.pinky;
+  const owe=(pinky&&craps)?G.round:2*G.round;
+  G.loseQ=0;
+  if(G.coins>=owe){ G.coins-=owe; lines.push(`Repaid Death ${owe}.`); }
+  else { lines.push(`Death takes your last ${G.coins} coin${G.coins===1?'':'s'} and one finger.`); G.coins=0; G.loseQ++; }
+  if(pinky&&!craps){ G.loseQ++; lines.push('Pinky Promise broken. One more finger.'); }
+  lines.forEach(note);
+  if(G.loseQ>0){
+    G.stage='pick-finger';
+    say(`Choose ${G.loseQ===1?'a finger':`${G.loseQ} fingers`} to surrender.`);
+  } else {
+    say(`Round ${G.round} settled. ${craps?'You beat the house.':'The house beat you.'}`);
+    advance();
+  }
+}
+
+function loseFinger(id){
+  if(G.stage!=='pick-finger'||!G.alive.includes(id)) return;
+  G.alive=G.alive.filter(x=>x!==id);
+  delete G.bought[id];
+  G.loseQ--;
+  note(`${POW(id).finger} finger gone. ${POW(id).name} is lost for good.`);
+  if(G.alive.length===0){ gameOver(); return; }
+  if(G.loseQ<=0){ say(`Round ${G.round} settled. ${G.alive.length} finger${G.alive.length===1?'':'s'} left.`); advance(); }
+  else G.msg=`Choose ${G.loseQ===1?'one more finger':G.loseQ+' more fingers'} to surrender.`;
+}
+
+function advance(){
+  if(G.alive.length===0){ gameOver(); return; }
+  G.round++; startRound();
+}
+
+function gameOver(){
+  G.over=true; G.stage='over';
+  const r=G.round;
+  if(r>G.best){G.best=r; saveBest(r);}
+  G.msg=`Death thanks you for your patronage. He'd shake your hand, but... well.`;
+  note(`Final rank: ${rank(r)}, reached round ${r}.`);
+}
+
+function restart(){
+  G=fresh(G.best); G.screen='game'; startRound();
+}
+
+/* Dice physics. A small pool of trajectories is simulated once, when the page loads, with real gravity,
+   bounces that lose energy, sliding friction and spin that dies down. Each roll picks one trajectory per die
+   at random, so the throws vary without anything looking staged. */
+function makeRNG(seed){ let s=seed>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function makeDie(seed,x0){
+  const rnd=makeRNG(seed);
+  const vx=(rnd()<.5?-1:1)*(0.22+rnd()*0.3);
+  const th=rnd()*60;
+  return {rnd, x:x0, vx, h:0, vh:5.2+rnd()*1.6, th, w:(rnd()<.5?-1:1)*(600+rnd()*500),
+    rest:0.42+rnd()*0.12, bounces:0, landed:false, settleAt:-1, thFrom:0, thTo:0,
+    lastQ:Math.floor(Math.abs(th)/90), face:1+Math.floor(rnd()*6), frames:[]};
+}
+/* Advance one die by one 60 fps frame: gravity, bounces, sliding friction, spin, then a settle. */
+function stepDie(d,f){
+  const DT=1/60, G_ACC=9.8;
+  if(d.settleAt<0){
+    d.vh-=G_ACC*DT; d.h+=d.vh*DT;
+    if(d.h<=0){
+      d.h=0;
+      if(d.vh<-0.9 && d.bounces<6){ d.vh=-d.vh*d.rest; d.bounces++; d.vx*=0.85; d.w*=0.72; }
+      else { d.vh=0; d.landed=true; }
+    }
+    d.vx*= d.landed ? Math.exp(-3.2*DT) : (1-0.2*DT);
+    d.w*= d.landed ? Math.exp(-3.0*DT) : 1;
+    d.x+=d.vx*DT; d.th+=d.w*DT;
+    if(d.x<0){ d.x=0; d.vx=Math.abs(d.vx)*0.6; }
+    if(d.x>1){ d.x=1; d.vx=-Math.abs(d.vx)*0.6; }
+    const q=Math.floor(Math.abs(d.th)/90);
+    if(q!==d.lastQ){ d.lastQ=q; d.face=1+Math.floor(d.rnd()*6); }
+    if((d.landed && Math.abs(d.vx)<0.004 && Math.abs(d.w)<25) || f>=60*3.6){
+      d.settleAt=f; d.thFrom=d.th; d.thTo=Math.round(d.th/90)*90;
+    }
+    d.frames.push({x:d.x,h:d.h,th:d.th,face:d.face,settled:false});
+  } else {
+    const k=Math.min(1,(f-d.settleAt)/12), e=1-Math.pow(1-k,3);
+    d.frames.push({x:d.x,h:0,th:d.thFrom+(d.thTo-d.thFrom)*e,face:d.face,settled:true});
+  }
+}
+/* Simulate both dice together. When they overlap on screen (close in x, and at about the same height),
+   they push apart and bounce off each other, so one never covers the other. */
+function simulatePair(seed){
+  const GAP=0.2, HGT=1.0, N=60*4+13;
+  const A=makeDie(seed,0.4), B=makeDie(seed+5557,0.6);
+  for(let f=0; f<N; f++){
+    stepDie(A,f); stepDie(B,f);
+    const dx=B.x-A.x, dir=dx<0?-1:1;
+    if(Math.abs(dx)<GAP && Math.abs(A.h-B.h)<HGT){
+      const pen=GAP-Math.abs(dx);
+      A.x=Math.min(1,Math.max(0,A.x-dir*pen/2));
+      B.x=Math.min(1,Math.max(0,B.x+dir*pen/2));
+      if((A.vx-B.vx)*dir>0){ const a=A.vx, b=B.vx; A.vx=b*0.6; B.vx=a*0.6; }
+      A.frames[f].x=A.x; B.frames[f].x=B.x;
+    }
+  }
+  return [A.frames,B.frames];
+}
+const PAIRS=Array.from({length:8},(_,k)=>simulatePair(1000+k*7919));
+
+function laneHTML(){
+  const showSum=G.dice[0]&&G.dice[1]&&!G.rolling;
+  const mid=(G.dicePos[0]+G.dicePos[1])/2;
+  return dieHTML(G.dice[0],0)+dieHTML(G.dice[1],1)
+    ;
+}
+
+function animateDice(finalDice, after){
+  G.rolling=true; G.pickDie=false;
+  const first=document.querySelector('#dice .die');
+  const size=first?first.offsetWidth:56;
+  const picks=PAIRS[Math.floor(Math.random()*PAIRS.length)];
+  const t0=performance.now();
+  const frame=now=>{
+    const f=Math.floor((now-t0)/(1000/60));
+    const els=document.querySelectorAll('#dice .die');
+    let done=true;
+    picks.forEach((tr,i)=>{
+      const idx=Math.min(f,tr.length-1);
+      if(f<tr.length-1) done=false;
+      const fr=tr[idx];
+      const el=els[i]; if(!el) return;
+      el.style.left=`calc((100% - var(--die)) * ${fr.x.toFixed(4)})`;
+      el.style.transform=`translateY(${(-fr.h*size).toFixed(1)}px) rotate(${fr.th.toFixed(1)}deg) scale(${(1+0.05*fr.h).toFixed(3)})`;
+      const face=fr.settled?finalDice[i]:fr.face;
+      if(el.dataset.face!==String(face)){
+        el.dataset.face=face;
+        [...el.querySelectorAll('i')].forEach((p,k)=>{ p.className=PIPS[face].includes(k)?'pip':''; });
+      }
+    });
+    if(!done){ requestAnimationFrame(frame); return; }
+    G.dicePos=picks.map(tr=>tr[tr.length-1].x);
+    G.rolling=false; G.dice=finalDice;
+    els.forEach(el=>{ el.style.transform=''; });
+    after();
+  };
+  requestAnimationFrame(frame);
+}
+function landDice(){}
+
+/* Death pops out from a random side of the mat mid-roll, then slides back out of sight. */
+function peekDevil(){
+  const mat=document.querySelector('.mat'); if(!mat) return;
+  const img=document.createElement('img');
+  img.src='art/death.png'; img.alt=''; img.className='devil '+(Math.random()<.5?'left':'right');
+  img.style.top=(12+Math.random()*40)+'%';
+  mat.appendChild(img);
+  setTimeout(()=>img.remove(),1800);
+}
+
+function splashView(){
+  return `<section class="splash">
+    <img class="splash-art" src="art/splash.png" alt="OOPS, I DIED! cover: a grim reaper skull with dice">
+    <button class="btn big" data-act="start">Play</button>
+  </section>`;
+}
+
+function dieHTML(v,i){
+  const pipEls=[...Array(9)].map((_,k)=>`<i class="${PIPS[v].includes(k)?'pip':''}"></i>`).join('');
+  const cls=['die', G.pickDie?'picking':'', (G.stage==='bet'||G.stage==='await-roll')&&v===0?'idle':''].join(' ');
+  const act=G.pickDie&&G.stage==='pending';
+  return `<button class="${cls}" style="--f:${G.dicePos[i]}" ${act?`data-act="die" data-i="${i}"`:'tabindex="-1"'} aria-label="Die ${i+1}${v?`, showing ${v}`:''}">${pipEls}</button>`;
+}
+
+function view(){
+  if(G.screen==='splash') return splashView();
+  const rem=remaining();
+  const bet=G.stage==='bet';
+  const coinsShown=G.coins+(bet?0:G.inPlay);
+
+  const stats=`<div class="stats">
+    <div class="stat"><span>Round</span><b>${G.round}</b></div>
+    <div class="stat"><span>Coins</span><b>${coinsShown}</b></div>
+    <div class="stat"><span>Repay Death</span><b>${G.round*2}</b></div>
+    <div class="stat"><span>Fingers</span><b>${G.alive.length}</b></div>
+    <div class="stat"><span>Best round</span><b>${G.best||'–'}</b></div>
+  </div>`;
+
+  const banner=`<div class="death" role="status" aria-live="polite"><span class="who">Death</span><p>${G.msg||'Place your bets.'}</p></div>`;
+
+  const betsHTML=BETS.map(b=>{
+    const st=G.stakes[b.id]||0;
+    const res=G.res[b.id];
+    const state=res?(res==='win'?'won':'lost'):'';
+    const stakeUI=bet
+      ? `<div class="stake">
+          <button data-act="stake-" data-id="${b.id}" aria-label="Remove one coin from ${b.name}">−</button>
+          <input type="number" min="0" inputmode="numeric" value="${st}" data-stake="${b.id}" aria-label="Coins on ${b.name}">
+          <button data-act="stake+" data-id="${b.id}" aria-label="Add one coin to ${b.name}">+</button>
+          <button class="mini" data-act="all" data-id="${b.id}">All</button>
+        </div>`
+      : `<div class="stake-fixed">${st?`${st} coin${st===1?'':'s'} on the mat`:'No coins'}</div>`;
+    return `<div class="bet ${b.cell} ${state}">
+      <div class="bet-row"><b class="bet-name">${b.name}</b><span class="odds">${b.odds}:1</span></div>
+      <div class="bet-cond">${b.cond}</div>
+      ${stakeUI}
+    </div>`;
+  }).join('');
+
+  const total=(G.dice[0]&&G.dice[1]&&!G.rolling)?G.dice[0]+G.dice[1]:null;
+  const resultHTML=`<div class="result ${total===null?'empty':''}" aria-label="${total===null?'No result yet':'Total '+total}">${total===null?'':total}</div>`;
+  const placeTile=`<div class="place"><span>Place<br>your bets</span><small>${bet?`${rem} coin${rem===1?'':'s'} left to place`:'Bets are on the mat'}</small></div>`;
+
+  const hotHTML=POWER.map(p=>{
+    const alive=G.alive.includes(p.id);
+    const on=!!G.bought[p.id];
+    const cls=['hot', on?'on':'', alive?'':'gone'].join(' ');
+    const canBuy=alive&&bet;
+    const label=alive?`${on?'Remove':'Buy'} ${p.name} for ${p.cost}`:`${p.name} is lost`;
+    const content=alive?p.cost:'×';
+    return `<button class="${cls}" style="left:${p.pos[0]}%;top:${p.pos[1]}%" ${canBuy?`data-act="buy" data-id="${p.id}"`:'disabled'} aria-pressed="${on}" aria-label="${label}" title="${p.name}: ${p.desc}">${content}</button>`;
+  }).join('');
+
+  let controls='';
+  if(G.over){
+    controls=`<p class="hint">${rank(G.round)} · round ${G.round} · best ${G.best}</p>
+      <button class="btn big" data-act="restart">Play again</button>`;
+  } else if(G.rolling){
+    controls=`<button class="btn big" data-act="roll" disabled>Rolling…</button><p class="hint" aria-hidden="true">&nbsp;</p>`;
+  } else if(G.stage==='bet'){
+    const ok=rem===0&&G.coins>0;
+    controls=`<button class="btn big" data-act="roll" ${ok?'':'disabled'}>Lock bets and roll</button>
+      <p class="hint">${rem===0?'Every coin is spoken for.':`${rem} coin${rem===1?'':'s'} left to place. Spend them all.`}</p>`;
+  } else if(G.stage==='await-roll'){
+    controls=`<button class="btn big" data-act="roll">${G.phase==='come'?'Roll the come-out':`Roll for ${G.point}`}</button>
+      <p class="hint">${G.phase==='come'?'7 or 11 wins. 2, 3, or 12 loses. Anything else sets the Point.':`Hit ${G.point} to win. A 7 loses.`}</p>`;
+  } else if(G.stage==='pending'){
+    controls=`<div class="row">
+        ${G.rerolls.thumb?`<button class="btn ghost" data-act="reroll-both">Reroll both</button>`:''}
+        ${G.rerolls.index?`<button class="btn ghost" data-act="reroll-one">${G.pickDie?'Cancel':'Reroll one'}</button>`:''}
+        <button class="btn big" data-act="accept">Take the roll</button>
+      </div>
+      ${G.pickDie?'<p class="hint">Tap the die to reroll.</p>':''}`;
+  } else if(G.stage==='choose-ring'){
+    const winners=BETS.filter(b=>G.stakes[b.id]&&G.res[b.id]==='win');
+    controls=`<p class="hint">Ring-a-Ding doubles one winning profit.</p>
+      <div class="row">${winners.map(b=>`<button class="btn" data-act="ring" data-id="${b.id}">${b.name}</button>`).join('')}</div>`;
+  } else if(G.stage==='pick-finger'){
+    controls=`<p class="hint">${G.loseQ} finger${G.loseQ===1?'':'s'} to surrender.</p>
+      <div class="row">${G.alive.map(id=>`<button class="btn ghost" data-act="pick-finger" data-id="${id}">${POW(id).finger}</button>`).join('')}</div>`;
+  }
+
+  return `
+  ${stats}
+  ${banner}
+  <main class="mat">
+    <section class="table" aria-label="Bets">
+      ${betsHTML}
+      ${placeTile}
+    </section>
+    <section class="powers" aria-label="Finger powerups">
+      <div class="art">${hotHTML}</div>
+    </section>
+    <section class="sec-dice">
+      <div class="actions">${controls}</div>
+      <div class="track">
+        <div class="lane" id="dice">${laneHTML()}</div>
+      </div>
+      ${resultHTML}
+    </section>
+  </main>
+  <section class="ledger" aria-label="Ledger">
+    <ol class="log">${G.log.slice(0,4).map(l=>`<li>${l}</li>`).join('')}</ol>
+  </section>`;
+}
+
+function render(){
+  document.getElementById('app').innerHTML=view();
+}
+
+const app=document.getElementById('app');
+app.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');
+  if(!t) return;
+  const a=t.dataset.act, id=t.dataset.id;
+  switch(a){
+    case 'start': G.screen='game'; break;
+    case 'stake+': setStake(id,(G.stakes[id]||0)+1); break;
+    case 'stake-': setStake(id,(G.stakes[id]||0)-1); break;
+    case 'all': setStake(id,(G.stakes[id]||0)+remaining()); break;
+    case 'buy': toggleBuy(id); break;
+    case 'roll': doRoll(); break;
+    case 'reroll-both': rerollBoth(); break;
+    case 'reroll-one': togglePickDie(); break;
+    case 'die': rerollDie(Number(t.dataset.i)); break;
+    case 'accept': accept(); break;
+    case 'ring': pickRing(id); break;
+    case 'pick-finger': loseFinger(id); break;
+    case 'restart': restart(); break;
+  }
+  render();
+});
+app.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.matches&&t.matches('input[data-stake]')){
+    setStake(t.dataset.stake,t.value);
+    render();
+  }
+});
+
+G=fresh(loadBest());
+startRound();
+render();
+</script>
+
+</body></html>
