@@ -425,7 +425,20 @@ function animateDice(finalDice, after){
   const size=first?first.offsetWidth:56;
   const picks=PAIRS[Math.floor(Math.random()*PAIRS.length)];
   const t0=performance.now();
+  let finished=false;
+  /* Ends the roll exactly once: the dice settle, the button unlocks and the result is scored. */
+  const finish=()=>{
+    if(finished) return; finished=true;
+    G.dicePos=picks.map(tr=>tr[tr.length-1].x);
+    G.rolling=false; G.dice=finalDice;
+    document.querySelectorAll('#dice .die').forEach(el=>{ el.style.transform=''; });
+    after();
+  };
+  /* Driven by timers rather than requestAnimationFrame, which some browsers pause (hidden or embedded pages).
+     The watchdog guarantees the roll always finishes, even if the timers are throttled. */
+  setTimeout(finish, 5500);
   const frame=now=>{
+    if(finished) return;
     const f=Math.floor((now-t0)/(1000/60));
     const els=document.querySelectorAll('#dice .die');
     let done=true;
@@ -442,13 +455,10 @@ function animateDice(finalDice, after){
         [...el.querySelectorAll('i')].forEach((p,k)=>{ p.className=PIPS[face].includes(k)?'pip':''; });
       }
     });
-    if(!done){ requestAnimationFrame(frame); return; }
-    G.dicePos=picks.map(tr=>tr[tr.length-1].x);
-    G.rolling=false; G.dice=finalDice;
-    els.forEach(el=>{ el.style.transform=''; });
-    after();
+    if(!done){ setTimeout(()=>frame(performance.now()),16); return; }
+    finish();
   };
-  requestAnimationFrame(frame);
+  frame(t0);
 }
 function landDice(){}
 
